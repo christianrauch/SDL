@@ -43,6 +43,10 @@
 #include "xdg-shell-unstable-v6-client-protocol.h"
 #include "keyboard-shortcuts-inhibit-unstable-v1-client-protocol.h"
 
+#ifdef HAVE_LIBDECOR_H
+#include <libdecor.h>
+#endif
+
 #ifdef SDL_INPUT_LINUXEV
 #include <linux/input.h>
 #else
@@ -265,6 +269,11 @@ pointer_handle_enter(void *data, struct wl_pointer *pointer,
         return;
     }
 
+    /* check that this surface belongs to one of the SDL windows */
+    if (!SDL_WAYLAND_own_surface(surface)) {
+        return;
+    }
+
     /* This handler will be called twice in Wayland 1.4
      * Once for the window surface which has valid user data
      * and again for the mouse cursor surface which does not have valid user data
@@ -321,8 +330,18 @@ ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
            WL_SHELL_SURFACE_RESIZE_*), but the values are the same. */
         const uint32_t *directions_zxdg = directions_wl;
 
+#ifdef HAVE_LIBDECOR_H
+        /* ditto for libdecor. */
+        const uint32_t *directions_libdecor = directions_wl;
+#endif
+
         switch (rc) {
             case SDL_HITTEST_DRAGGABLE:
+#ifdef HAVE_LIBDECOR_H
+                if (input->display->shell.libdecor) {
+                    libdecor_frame_move(window_data->shell_surface.libdecor.frame, input->seat, serial);
+                } else
+#endif
                 if (input->display->shell.xdg) {
                     xdg_toplevel_move(window_data->shell_surface.xdg.roleobj.toplevel, input->seat, serial);
                 } else if (input->display->shell.zxdg) {
@@ -340,6 +359,11 @@ ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
             case SDL_HITTEST_RESIZE_BOTTOM:
             case SDL_HITTEST_RESIZE_BOTTOMLEFT:
             case SDL_HITTEST_RESIZE_LEFT:
+#ifdef HAVE_LIBDECOR_H
+                if (input->display->shell.libdecor) {
+                    libdecor_frame_resize(window_data->shell_surface.libdecor.frame, input->seat, serial, directions_libdecor[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
+                } else
+#endif
                 if (input->display->shell.xdg) {
                     xdg_toplevel_resize(window_data->shell_surface.xdg.roleobj.toplevel, input->seat, serial, directions_zxdg[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
                 } else if (input->display->shell.zxdg) {

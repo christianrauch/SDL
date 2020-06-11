@@ -693,6 +693,22 @@ macro(CheckWayland)
         set(EXTRA_LIBS ${WAYLAND_LIBRARIES} ${EXTRA_LIBS})
       endif()
 
+      if(WAYLAND_LIBDECOR)
+        include(ExternalProject)
+        ExternalProject_Add(libdecor
+          PREFIX "${CMAKE_CURRENT_BINARY_DIR}/extern/libdecor"
+          GIT_REPOSITORY https://gitlab.gnome.org/jadahl/libdecoration.git
+          GIT_TAG master
+          CONFIGURE_COMMAND meson --prefix "${CMAKE_CURRENT_BINARY_DIR}/install" --libdir "lib" ../libdecor
+          BUILD_COMMAND ninja
+          INSTALL_COMMAND ninja install
+        )
+
+        set(SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_LIBDECOR "\"libdecor-0.1.so\"")
+
+        add_definitions(-DHAVE_LIBDECOR_H)
+      endif()
+
       set(SDL_VIDEO_DRIVER_WAYLAND 1)
     endif()
   endif()

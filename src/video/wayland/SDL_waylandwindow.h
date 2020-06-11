@@ -50,6 +50,13 @@ typedef struct {
     SDL_bool initial_configure_seen;
 } SDL_xdg_shell_surface;
 
+#ifdef HAVE_LIBDECOR_H
+typedef struct {
+    struct libdecor_frame *frame;
+    SDL_bool initial_configure_seen;
+} SDL_libdecor_surface;
+#endif
+
 typedef struct {
     SDL_Window *sdlwindow;
     SDL_VideoData *waylandData;
@@ -57,6 +64,9 @@ typedef struct {
     union {
         SDL_xdg_shell_surface xdg;
         SDL_zxdg_shell_surface zxdg;
+#ifdef HAVE_LIBDECOR_H
+        SDL_libdecor_surface libdecor;
+#endif
         struct wl_shell_surface *wl;
     } shell_surface;
     struct wl_egl_window *egl_window;
@@ -100,6 +110,7 @@ extern int Wayland_CreateWindow(_THIS, SDL_Window *window);
 extern void Wayland_SetWindowSize(_THIS, SDL_Window * window);
 extern void Wayland_SetWindowMinimumSize(_THIS, SDL_Window * window);
 extern void Wayland_SetWindowMaximumSize(_THIS, SDL_Window * window);
+extern int Wayland_GetWindowBordersSize(_THIS, SDL_Window * window, int *top, int *left, int *bottom, int *right);
 extern void Wayland_SetWindowTitle(_THIS, SDL_Window * window);
 extern void Wayland_DestroyWindow(_THIS, SDL_Window *window);
 extern void Wayland_SuspendScreenSaver(_THIS);
@@ -109,6 +120,8 @@ Wayland_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info);
 extern int Wayland_SetWindowHitTest(SDL_Window *window, SDL_bool enabled);
 
 extern void Wayland_HandlePendingResize(SDL_Window *window);
+
+extern SDL_bool SDL_WAYLAND_own_surface(struct wl_surface *surface);
 
 #endif /* SDL_waylandwindow_h_ */
 
