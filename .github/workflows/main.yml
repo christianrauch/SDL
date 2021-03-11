@@ -49,6 +49,12 @@ jobs:
           libdrm-dev \
           libgbm-dev\
           libpulse-dev
+        sudo apt install meson
+        git clone https://gitlab.gnome.org/jadahl/libdecoration.git
+        cd libdecoration
+        meson build
+        ninja -C build
+        sudo ninja -C build install
     - uses: actions/checkout@v2
     - name: Configure CMake
       run: cmake -B build ${{ matrix.platform.flags }}
